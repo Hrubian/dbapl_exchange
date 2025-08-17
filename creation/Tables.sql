@@ -84,12 +84,29 @@ CREATE TABLE ProfitAndLoss(
 
 /* Indexes TODO */
 
+CREATE INDEX Contracts_Product_Idx ON Contracts(ProductID);
+
+CREATE INDEX Orders_Contract_Price_Side_Active_Idx ON Orders(ContractID, Price, Side, Active);
+
+CREATE INDEX Trades_BuyOrderID_Idx ON Trades(BuyOrderID);
+CREATE INDEX Trades_SellOrderID_Idx ON Trades(SellOrderID);
+
+
+
 /* Sequences */
 
-CREATE SEQUENCE Product_ID_Sequence START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE Product_ID_Sequence START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE Product_ID_Sequence START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE Product_ID_Sequence START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE Product_ID_Sequence START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE Products_ID_Sequence START WITH 1 INCREMENT BY 1;
+
+CREATE TRIGGER Products_INSERT
+BEFORE INSERT ON Products
+	FOR EACH ROW 
+BEGIN
+	SELECT Products_ID_Sequence INTO :NEW.ID FROM dual;
+END;
+
+CREATE SEQUENCE Contracts_ID_Sequence START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE Participants_ID_Sequence START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE Orders_ID_Sequence START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE Trades_ID_Sequence START WITH 1 INCREMENT BY 1;
 
 /* Triggers TODO */
