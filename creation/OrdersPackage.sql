@@ -119,7 +119,46 @@ AS
 				EXIT;
 			END IF;
 			
+			IF vBuyOrder.Quantity = vSellOrder.Quantity THEN
+				/* Exact match, eat both of them */
+				UPDATE Orders
+				SET Quantity = 0, Active = 'N'
+				WHERE CURRENT OF vBuyOrderCursor;
 			
+				UPDATE orders
+				SET Quantity = 0, Active = 'N'
+				WHERE CURRENT OF vSellOrderCursor;
+				
+				INSERT INTO Trades(Price, Quantity, BuyOrderID, SellOrderId, ExecutionTs)
+				VALUES (vBuyOrder.Price, vBuyOrder.Quantity, vBuyOrder.ID, vSellOrder.ID); /* TODO get the correct price from passive order */
+				
+			ELSIF vBuyOrder.Quantity < vSellOrder.Quantity THEN 
+				/* Eat the buy order fully */
+				UPDATE Orders
+				SET Quantity = 0, Active = 'N'
+				WHERE CURRENT OF vBuyOrderCursor;
+			
+				UPDATE Orders
+				SET Quantity = Quantity - vBuyOrder.Quantity
+				WHERE CURRENT OF vSellOrderCursor;
+				
+				INSERT INTO Trades(Price, Quantity, BuyOrderID, SellOrderId, ExecutionTs)
+				VALUES (vBuyOrder.Price, vSellOrder.Quantity, vBuyOrder.ID, vSellOrder.ID); /* TODO get the correct price from passive order */
+				
+			ELSE /* vBuyOrder.Quantity > vSellOrder.Quantity */
+				/* Eat the sell order fully */
+				UPDATE Orders
+				SET Quantity = Quantity - vSellOrder.Quantity
+				WHERE CURRENT OF vBuyOrderCursor;
+			
+				UPDATE Orders
+				SET Quantity = 0, Active = 'N'
+				WHERE CURRENT OF vSellOrderCursor;
+				
+				INSERT INTO Trades(Price, Quantity, BuyOrderID, SellOrderId, ExecutionTs)
+				VALUES (vBuyOrder.Price, vSellOrder.Quantity, vBuyOrder.ID, vSellOrder.ID); /* TODO get the correct price from passive order */
+
+			END IF;
 		END LOOP
 		
 		
