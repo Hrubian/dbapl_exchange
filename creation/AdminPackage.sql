@@ -16,6 +16,11 @@ AS
 		pNewSellLimit ParticipantAllowedProducts.SellLimit%TYPE
 	);
 	
+	PROCEDURE CreateContract(
+		pProduct Contracts.ProductID%TYPE,
+		pTradingStart Contracts.TradingStart%TYPE,
+	);
+	
 	PROCEDURE CloseContract(
 		pContract Contracts.ID%TYPE,
 		pSettlementPrice ProfitAndLoss.Value%TYPE
@@ -88,14 +93,60 @@ AS
 			INSERT (ParticipantId, ProductID, BuyLimit, SellLimit)
 			VALUES (src.ParticipantID, src.ProductID, src.NewBuyLimit, src.NewSellLimit);
 	END ChangeUserLimit;
+		
+	PROCEDURE CreateContract(
+		pProductID Contracts.ProductID%TYPE,
+		pTradingStart Contracts.TradingStart%TYPE,
+	) AS
+		vProductID Products.ID%TYPE;
+	BEGIN
+		BEGIN
+			SELECT 1 INTO vProductID
+			FROM Products p WHERE p.ID = pProductID
+			FOR UPDATE;
+		EXCEPTION
+			WHEN NO_DATA_FOUND THEN
+				RAISE_APPLICATION_ERROR(-20002, 'Product not found: ' || pProductID);
+		END;
+	
+		INSERT INTO Contracts(ProductID, TradingStart, Expired)
+		VALUES (pProductID, pTradingStart, 'N');
+	END CreateContract;
 	
 	PROCEDURE CloseContract(
 		pContract Contracts.ID%TYPE,
 		pSettlementPrice ProfitAndLoss.Value%TYPE
 	) AS
 	BEGIN
-		NULL;
+		/*
+		 * TODO:
+		 * - close contract
+		 * - deactivate orders
+		 * - calculate pnls
+		 * */
+		UPDATE Contracts
+		SET Expired = 'Y'
+		WHERE ID = pContract;
+	
+		UPDATE Orders
+		SET Active = 'N'
+		WHERE ContractID = pContract;
+		
+		FOR r IN (SELECT ) LOOP
+			AdminPackage.CalculatePnl(pContract, pSettlementPrice, )
+		END LOOP
+		
 	END CloseContract;
+		
+	/* Private procedure, only in body */
+	PROCEDURE CalculatePnl(
+		pContract Contracts.ID%TYPE,
+		pSettlementPrice ProfitAndLoss.Value%TYPE,
+		pParticipant Participants.ID%TYPE
+	) AS 
+	BEGIN
+		
+	END CalculatePnl;
 	
 	PROCEDURE CreateProduct(
 		pProductName Products.Name%TYPE
@@ -104,4 +155,6 @@ AS
 		INSERT INTO Products(Name) VALUES (pProductName);
 	END CreateProduct;
 END AdminPackage;
+
+
 	

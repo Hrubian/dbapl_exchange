@@ -5,6 +5,7 @@ AS
 	PROCEDURE NewOrder(
 		pPrice Orders.Price%TYPE,
 		pQuantity Orders.Quantity%TYPE,
+		pSide Orders.Side%TYPE,
 		pOwner Orders.OwnerID%TYPE,
 		pContract Orders.ContractID%TYPE		
 	);
@@ -20,8 +21,6 @@ AS
 		pOwner Orders.OwnerID%TYPE,
 		pOrderID Orders.ID%TYPE
 	);
-	
-	
 END OrdersPackage;
 
 CREATE OR replace package body OrdersPackage
@@ -35,7 +34,7 @@ AS
 	) AS 
 	BEGIN
 		/* TODO check user existence */
-		/* TODO check contract existance and activity */
+		/* TODO check contract existance and activity expiration and trading start */
 		INSERT INTO Orders(Price, Quantity, Side, Active, CreationTs, OwnerID, ContractID)
 		VALUES (pPrice, pQuantity, pSide, 'Y', CAST(systimestamp AS timestamp(3), pOwner, pContract);
 		

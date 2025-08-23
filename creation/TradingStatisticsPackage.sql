@@ -19,10 +19,33 @@ AS
 		pParticipantID Participants.ID%TYPE,
 		pContract Contracts.ID%TYPE
 	) AS
+		vBuyPosition Trades.Quantity%TYPE;
+		vSellPosition Trades.Quantity%TYPE;
 	BEGIN
 		/*TODO check participant and contract existance*/
 		SELECT sum(Quantity)
-		FROM Trades
-		WHERE 
+		INTO vBuyPosition
+		FROM Trades t
+		INNER JOIN Orders o ON t.BuyOrderID = o.ID
+		WHERE o.ContractID = pContract AND o.OwnerID = pParticipantID;
+
+		SELECT sum(Quantity)
+		INTO vBuyPosition
+		FROM Trades t
+		INNER JOIN Orders o ON t.SellOrderID = o.ID
+		WHERE o.ContractID = pContract AND o.OwnerID = pParticipantID;
+		
+		RETURN vSellPosition - vBuyPosition;
 	END GetPosition;
+
+	FUNCTION GetPNL(
+		pParticipantID Participant.ID%TYPE,
+		pProduct Products.ID%TYPE
+	) AS
+	BEGIN
+		RETURN SELECT sum(pnl.Value)
+		FROM ProfitAndLoss pnl
+		INNER JOIN Contracts ctr ON pnl.ContractID = ctr.ID
+		WHERE ctr.ProductID = pProduct;
+	END GetPNL;
 END TradingStatisticsPackage;
