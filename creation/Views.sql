@@ -28,7 +28,7 @@ AS
 /* View of total traded volume across all products */
 CREATE OR replace VIEW UsersPnL
 AS
-	SELECT prod.Name, sum(tr.Quantity)
+	SELECT prod.Name ProductName, sum(tr.Quantity) TradedVolume
 	FROM Trades tr
 		INNER JOIN (Orders ord
 			INNER JOIN (Contracts con
@@ -36,6 +36,5 @@ AS
 					ON prod.ID = con.ProductID)
 				ON ord.ContractID = con.ID)
 			ON (tr.BuyOrderID = ord.ID OR tr.SellOrderID = ord.ID)
-	GROUP BY prod.ID;
-
+	GROUP BY prod.ID, prod.Name;
 
