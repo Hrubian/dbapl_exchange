@@ -17,8 +17,8 @@ AS
 	);
 	
 	PROCEDURE CreateContract(
-		pProduct Contracts.ProductID%TYPE,
-		pTradingStart Contracts.TradingStart%TYPE,
+		pProductID Contracts.ProductID%TYPE,
+		pTradingStart Contracts.TradingStart%TYPE
 	);
 	
 	PROCEDURE CloseContract(
@@ -34,6 +34,33 @@ END AdminPackage;
 
 CREATE OR replace package body AdminPackage
 AS
+	/* Private procedure, only in body */
+	PROCEDURE CalculatePnl(
+		pContract Contracts.ID%TYPE,
+		pSettlementPrice ProfitAndLoss.Value%TYPE,
+		pParticipantID Participants.ID%TYPE
+	) AS 
+		vSellProfit ProfitAndLoss.Value%TYPE;
+		vBuyLoss ProfitAndLoss.Value%TYPE;
+		vBuyPosition ProfitAndLoss.Value%TYPE;
+		vSellPosition ProfitAndLoss.Value%TYPE;
+	BEGIN
+		SELECT nvl(sum(t.Quantity), 0), nvl(sum(t.Quantity * t.Price), 0)
+		INTO vBuyPosition, vBuyLoss
+		FROM Trades t
+		INNER JOIN Orders o ON t.BuyOrderID = o.ID
+		WHERE o.ContractID = pContract AND o.OwnerID = pParticipantID;
+
+		SELECT nvl(sum(t.Quantity), 0), nvl(sum(t.Quantity * t.Price), 0)
+		INTO vSellPosition, vSellProfit
+		FROM Trades t
+		INNER JOIN Orders o ON t.SellOrderID = o.ID
+		WHERE o.ContractID = pContract AND o.OwnerID = pParticipantID;
+				
+		INSERT INTO ProfitAndLoss(ParticipantID, ContractID, Value)
+		VALUES (pParticipantID, pContract, vSellProfit - vBuyLoss + (vBuyPosition - vSellPosition) * pSettlementPrice);
+	END CalculatePnl;
+
 	PROCEDURE CreateUser(
 		pLegalName Participants.LegalName%TYPE
 	) AS
@@ -96,7 +123,7 @@ AS
 		
 	PROCEDURE CreateContract(
 		pProductID Contracts.ProductID%TYPE,
-		pTradingStart Contracts.TradingStart%TYPE,
+		pTradingStart Contracts.TradingStart%TYPE
 	) AS
 		vProductID Products.ID%TYPE;
 	BEGIN
@@ -118,12 +145,6 @@ AS
 		pSettlementPrice ProfitAndLoss.Value%TYPE
 	) AS
 	BEGIN
-		/*
-		 * TODO:
-		 * - close contract
-		 * - deactivate orders
-		 * - calculate pnls
-		 * */
 		UPDATE Contracts
 		SET Expired = 'Y'
 		WHERE ID = pContract;
@@ -132,22 +153,17 @@ AS
 		SET Active = 'N'
 		WHERE ContractID = pContract;
 		
-		FOR r IN (SELECT ) LOOP
-			AdminPackage.CalculatePnl(pContract, pSettlementPrice, )
-		END LOOP
+		FOR owner IN (
+				SELECT DISTINCT o.OwnerID 
+				FROM Trades t 
+				INNER JOIN Orders o ON (t.BuyOrderID = o.ID OR t.SellOrderID = o.ID)
+				WHERE ContractID = pContract
+		) LOOP
+			AdminPackage.CalculatePnl(pContract, pSettlementPrice, owner.OwnerID);
+		END LOOP;
 		
 	END CloseContract;
-		
-	/* Private procedure, only in body */
-	PROCEDURE CalculatePnl(
-		pContract Contracts.ID%TYPE,
-		pSettlementPrice ProfitAndLoss.Value%TYPE,
-		pParticipant Participants.ID%TYPE
-	) AS 
-	BEGIN
-		
-	END CalculatePnl;
-	
+			
 	PROCEDURE CreateProduct(
 		pProductName Products.Name%TYPE
 	) AS 
@@ -158,3 +174,11 @@ END AdminPackage;
 
 
 	
+
+
+
+
+
+
+
+
