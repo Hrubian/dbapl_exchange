@@ -21,8 +21,26 @@ AS
 	) RETURN NUMBER AS
 		vBuyPosition Trades.Quantity%TYPE;
 		vSellPosition Trades.Quantity%TYPE;
+		vParticipantID Participants.ID%TYPE;
+		vContractID Contracts.ID%TYPE;
 	BEGIN
-		/*TODO check participant and contract existance*/
+		BEGIN
+			SELECT 1 INTO vParticipantID
+			FROM Participants p WHERE p.ID = pParticipantID
+			FOR UPDATE;
+		EXCEPTION
+			WHEN NO_DATA_FOUND THEN
+				RAISE_APPLICATION_ERROR(-20001, 'Participant not found: ' || pParticipantID);
+		END;
+		BEGIN
+			SELECT 1 INTO vContractID
+			FROM Contracts c WHERE c.ID = pContract
+			FOR UPDATE;
+		EXCEPTION
+			WHEN NO_DATA_FOUND THEN
+				RAISE_APPLICATION_ERROR(-20005, 'Contract not found: ' || pContract);
+		END;
+
 		SELECT sum(t.Quantity)
 		INTO vBuyPosition
 		FROM Trades t
@@ -43,7 +61,26 @@ AS
 		pProduct Products.ID%TYPE
 	) RETURN ProfitAndLoss.Value%TYPE AS
 		vPNL ProfitAndLoss.Value%TYPE;
+		vParticipantID Participants.ID%TYPE;
+		vProductID Products.ID%TYPE;
 	BEGIN
+		BEGIN
+			SELECT 1 INTO vParticipantID
+			FROM Participants p WHERE p.ID = pParticipantID
+			FOR UPDATE;
+		EXCEPTION
+			WHEN NO_DATA_FOUND THEN
+				RAISE_APPLICATION_ERROR(-20001, 'Participant not found: ' || pParticipantID);
+		END;
+		BEGIN
+			SELECT 1 INTO vProductID
+			FROM Products p WHERE p.ID = pProduct
+			FOR UPDATE;
+		EXCEPTION
+			WHEN NO_DATA_FOUND THEN
+				RAISE_APPLICATION_ERROR(-20002, 'Product not found: ' || pProduct);
+		END;
+
 		SELECT sum(pnl.Value)
 		INTO vPNL
 		FROM ProfitAndLoss pnl

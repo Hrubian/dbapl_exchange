@@ -13,6 +13,12 @@ AS
 	WHERE Side = 'SELL'
 	GROUP BY ContractID, Side;
 
+/* View all active orders */
+CREATE OR REPLACE VIEW ActiveOrders
+AS
+	SELECT * FROM Orders
+	WHERE Active = 'Y';
+
 /* View of all market participants that can trade anything (have at least some non-zero limits) */
 CREATE OR replace VIEW ActiveParticipants
 AS

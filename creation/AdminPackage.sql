@@ -71,7 +71,16 @@ AS
 	PROCEDURE DeleteUser(
 		pParticipantID Participants.ID%TYPE
 	) AS
+		vParticipantID Participants.ID%TYPE;
 	BEGIN
+		BEGIN
+			SELECT 1 INTO vParticipantID
+			FROM Participants p WHERE p.ID = pParticipantID
+			FOR UPDATE;
+		EXCEPTION
+			WHEN NO_DATA_FOUND THEN
+				RAISE_APPLICATION_ERROR(-20001, 'Participant not found: ' || pParticipantID);
+		END;
 		DELETE FROM Participants p WHERE p.ID = pParticipantID;
 	END DeleteUser;
 
@@ -144,7 +153,17 @@ AS
 		pContract Contracts.ID%TYPE,
 		pSettlementPrice ProfitAndLoss.Value%TYPE
 	) AS
+		vContractID Contracts.ID%TYPE;
 	BEGIN
+		BEGIN
+			SELECT 1 INTO vContractID
+			FROM Contracts c WHERE c.ID = pContract
+			FOR UPDATE;
+		EXCEPTION
+			WHEN NO_DATA_FOUND THEN
+				RAISE_APPLICATION_ERROR(-20005, 'Contract not found: ' || pContract);
+		END;
+
 		UPDATE Contracts
 		SET Expired = 'Y'
 		WHERE ID = pContract;

@@ -28,7 +28,7 @@ CREATE TABLE Participants(
 
 CREATE TABLE ParticipantAllowedProducts(
 	ParticipantID numeric(15) NOT NULL
-		CONSTRAINT ParticipantAllowedProducts_ParticipantID_FK REFERENCES Participants(ID),
+		CONSTRAINT ParticipantAllowedProducts_ParticipantID_FK REFERENCES Participants(ID) ON DELETE CASCADE,
 	ProductID NUMERIC(15) NOT NULL
 		CONSTRAINT ParticipantAllowedProducts_ProductID_FK REFERENCES Products(ID),
 	BuyLimit NUMERIC(6, 2) NOT NULL
@@ -50,7 +50,7 @@ CREATE TABLE Orders(
 		CONSTRAINT Order_Active_Bounds check(Active IN ('Y', 'N')),
 	CreationTs timestamp(3) NOT NULL,
 	OwnerID numeric(15) NOT NULL
-		CONSTRAINT Order_OwnerID_FK REFERENCES Participants(ID),
+		CONSTRAINT Order_OwnerID_FK REFERENCES Participants(ID) ON DELETE CASCADE,
 	ContractID numeric(15) NOT NULL
 		CONSTRAINT Order_ContractID_FK REFERENCES Contracts(ID)
 );
@@ -61,10 +61,10 @@ CREATE TABLE Trades(
 	Price numeric(6, 2) NOT NULL,
 	Quantity numeric(6, 1) NOT NULL
 		CONSTRAINT Trade_Quantity_Positive check(Quantity > 0),
-	BuyOrderID numeric(15) NOT NULL
-		CONSTRAINT Trade_BuyOrderID_FK REFERENCES Orders(ID),
-	SellOrderID numeric(15) NOT NULL
-		CONSTRAINT Trade_SellOrderID_FK REFERENCES Orders(ID),
+	BuyOrderID numeric(15)
+		CONSTRAINT Trade_BuyOrderID_FK REFERENCES Orders(ID) ON DELETE SET null,
+	SellOrderID numeric(15)
+		CONSTRAINT Trade_SellOrderID_FK REFERENCES Orders(ID) ON DELETE SET null,
 	ExecutionTs timestamp(3) NOT NULL,
 	CONSTRAINT Trade_OrderIDs_Different CHECK(BuyOrderID <> SellOrderId)
 );
@@ -73,7 +73,7 @@ CREATE TABLE Trades(
 
 CREATE TABLE ProfitAndLoss(
 	ParticipantID numeric(15) NOT NULL
-		CONSTRAINT ProfitAndLoss_ParticipantID_FK REFERENCES Participants(ID),
+		CONSTRAINT ProfitAndLoss_ParticipantID_FK REFERENCES Participants(ID) ON DELETE CASCADE,
 	ContractID numeric(15) NOT NULL
 		CONSTRAINT ProfitAndLoss_ContractID_FK REFERENCES Contracts(ID),
 	Value numeric(9, 3) NOT NULL,
