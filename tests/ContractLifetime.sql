@@ -9,3 +9,17 @@
 * - check no new order can be created
 * - chech the PNL report is present and has correct value
 */
+
+DECLARE
+	vProductID Products.ID%TYPE;
+	vContractID Contracts.ID%TYPE;
+	vOrderID1 Orders.ID%TYPE;
+	vOrderID2 Orders.ID%TYPE;
+BEGIN
+	AdminPackage.CreateProduct('Wheat');
+	SELECT ID INTO vProductID FROM Products WHERE Name = 'Wheat';
+
+	AdminPackage.CreateContract(vProductID, systimestamp + INTERVAL '20' SECOND);
+	SELECT ID INTO vContractID FROM Contracts WHERE ProductID = vProductID;
+END;
+
