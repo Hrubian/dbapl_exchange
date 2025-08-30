@@ -16,7 +16,7 @@ BEGIN
     AdminPackage.CreateProduct('Gold');
     AdminPackage.CreateProduct('Sugar');
 END;
-/
+
 
 DECLARE
     vUserID1 Participants.ID%TYPE;
@@ -63,4 +63,3 @@ BEGIN
     AdminPackage.ChangeUserLimit(vUserID4, vProductID3, 100, 100);
     AdminPackage.ChangeUserLimit(vUserID4, vProductID4, 100, 100);
 END;
-/
