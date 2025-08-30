@@ -66,6 +66,7 @@ AS
 	) AS
 	BEGIN
 		INSERT INTO Participants(LegalName) VALUES (pLegalName);
+		LogMessage('New user created: ' || pLegalName);
 	END CreateUser;
 
 	PROCEDURE DeleteUser(
@@ -82,6 +83,7 @@ AS
 				RAISE_APPLICATION_ERROR(-20001, 'Participant not found: ' || pParticipantID);
 		END;
 		DELETE FROM Participants p WHERE p.ID = pParticipantID;
+		LogMessage('User deleted: ' || pParticipantID);	
 	END DeleteUser;
 
 	PROCEDURE ChangeUserLimit(
@@ -128,6 +130,8 @@ AS
 		WHEN NOT MATCHED THEN
 			INSERT (ParticipantId, ProductID, BuyLimit, SellLimit)
 			VALUES (src.ParticipantID, src.ProductID, src.NewBuyLimit, src.NewSellLimit);
+		
+		LogMessage('New limits assigned to user ' || pParticipantID || ' for product ' || pProductID || '. Buy: ' || pNewBuyLimit ||', Sell: ' || pNewSellLimit);
 	END ChangeUserLimit;
 		
 	PROCEDURE CreateContract(
@@ -147,6 +151,8 @@ AS
 	
 		INSERT INTO Contracts(ProductID, TradingStart, Expired)
 		VALUES (pProductID, pTradingStart, 'N');
+		
+		LogMessage('New contract created for product ' || pProductID || ' with trading start ' || pTradingStart);
 	END CreateContract;
 	
 	PROCEDURE CloseContract(
@@ -181,13 +187,15 @@ AS
 			AdminPackage.CalculatePnl(pContract, pSettlementPrice, owner.OwnerID);
 		END LOOP;
 		
+		LogMessage('Closed contract with ID ' || pContract);
 	END CloseContract;
 			
 	PROCEDURE CreateProduct(
 		pProductName Products.Name%TYPE
 	) AS 
-	BEGIN 
+	BEGIN
 		INSERT INTO Products(Name) VALUES (pProductName);
+		LogMessage('New product created: ' || pProductName);
 	END CreateProduct;
 END AdminPackage;
 

@@ -118,6 +118,8 @@ AS
 		/* TODO check contract existance and activity expiration and trading start */
 		INSERT INTO Orders(Price, Quantity, Side, Active, CreationTs, OwnerID, ContractID)
 		VALUES (pPrice, pQuantity, pSide, 'Y', CAST(systimestamp AS timestamp(3)), pOwner, pContract);
+	
+		LogMessage('New order created with price ' || pPrice ||', quantity ' || pQuantity || ', side ' || pSide || ', owner ' || pOwner || 'for contract ' || pContract);
 		
 		MatchOrders(pContract);
 	END NewOrder;
@@ -144,6 +146,8 @@ AS
 		UPDATE Orders
 		SET Price = pPrice, Quantity = pQuantity
 		WHERE ID = pOrderID;
+		
+		LogMessage('Order with ID ' || pOrderID || ' has new price ' || pPrice || ' and quantity ' || pQuantity);
 	
 		MatchOrders(vContractID);
 	END ModifyOrder;
@@ -167,6 +171,8 @@ AS
 	
 		DELETE FROM Orders
 		WHERE ID = pOrderID;
+		
+		LogMessage('Order with ID ' || pOrderID || ' cancelled');
 	END CancelOrder;
 END OrdersPackage;
 

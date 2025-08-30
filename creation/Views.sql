@@ -22,7 +22,7 @@ AS
 /* View of all market participants that can trade anything (have at least some non-zero limits) */
 CREATE OR replace VIEW ActiveParticipants
 AS
-	SELECT p.LegalName, count(pap.ProductID) AS AllowedProducts /* TODO is it correct? */
+	SELECT p.LegalName, count(pap.ProductID) AS AllowedProducts
 	FROM Participants p
 		INNER JOIN (ParticipantAllowedProducts pap
 			INNER JOIN Products prod 

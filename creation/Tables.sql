@@ -69,8 +69,6 @@ CREATE TABLE Trades(
 	CONSTRAINT Trade_OrderIDs_Different CHECK(BuyOrderID <> SellOrderId)
 );
 
-/* TODO will we ADD the AUDIT table? */
-
 CREATE TABLE ProfitAndLoss(
 	ParticipantID numeric(15) NOT NULL
 		CONSTRAINT ProfitAndLoss_ParticipantID_FK REFERENCES Participants(ID) ON DELETE CASCADE,
@@ -80,9 +78,12 @@ CREATE TABLE ProfitAndLoss(
 	CONSTRAINT ProfitAndLoss_PK PRIMARY key(ParticipantID, ContractID)
 );
 
+CREATE TABLE AuditLog(
+	Timestamp timestamp(3) NOT NULL,
+	Text CHARACTER varying(300 char) NOT NULL
+);
 
-
-/* Indexes TODO */
+/* Indexes */
 
 CREATE INDEX Contracts_Product_Idx ON Contracts(ProductID);
 
@@ -90,8 +91,6 @@ CREATE INDEX Orders_Contract_Price_Side_Active_Idx ON Orders(ContractID, Price, 
 
 CREATE INDEX Trades_BuyOrderID_Idx ON Trades(BuyOrderID);
 CREATE INDEX Trades_SellOrderID_Idx ON Trades(SellOrderID);
-
-
 
 /* Sequences */
 
@@ -128,6 +127,9 @@ CREATE OR REPLACE TRIGGER Orders_INSERT
 BEFORE INSERT ON Orders
 	FOR EACH ROW 
 BEGIN
+	IF (:NEW.Active <> 'Y') THEN
+		RAISE_APPLICATION_ERROR(-20015, 'Cannot insert inactive order');
+	END IF;
 	SELECT Orders_ID_Sequence.nextval INTO :NEW.ID FROM dual;
 END;
 
@@ -137,7 +139,50 @@ CREATE OR REPLACE TRIGGER Trades_INSERT
 BEFORE INSERT ON Trades
 	FOR EACH ROW 
 BEGIN
+	IF (:NEW.BuyOrderID IS NULL OR :NEW.SellOrderID IS null) THEN
+		RAISE_APPLICATION_ERROR(-20016, 'Trades should have both order IDs on insertion');
+	END IF;
 	SELECT Trades_ID_Sequence.nextval INTO :NEW.ID FROM dual;
 END;
 
-/* Triggers TODO */
+/* Triggers */
+
+CREATE OR REPLACE TRIGGER AuditLogInsert
+BEFORE INSERT ON AuditLog
+FOR EACH ROW
+BEGIN
+	:NEW.Timestamp = SYSTIMESTAMP;
+END;
+
+CREATE OR REPLACE TRIGGER AuditLogImmutable
+BEFORE UPDATE OR DELETE ON AuditLog
+FOR EACH ROW
+BEGIN
+	RAISE_APPLICATION_ERROR(-20020, 'Updates or delete are not allowed on the audit log.');
+END;
+
+CREATE OR REPLACE TRIGGER TradesImmutable
+BEFORE UPDATE OR DELETE ON Trades
+FOR EACH ROW
+BEGIN
+	RAISE_APPLICATION_ERROR(-20021, 'The trades cannot be removed and altered for audit purposes');
+END;
+
+
+/* Logging procedure */
+CREATE OR REPLACE PROCEDURE LogMessage(
+	pText AuditLog.Text%TYPE
+) AS
+BEGIN
+	INSERT INTO AuditLog(Text)
+	VALUES (pText);
+END LogMessage;
+
+
+
+
+
+
+
+
+
