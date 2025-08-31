@@ -3,7 +3,8 @@ BEGIN
 	DROP VIEW l1;
 	DROP VIEW ActiveOrders;
 	DROP VIEW ActiveParticipants;
-	DROP VIEW UsersPNL;
+	DROP VIEW UsersTradedVolume;
+	DROP VIEW TradesWithParticipants;
 	
 	/* DROP ALL packages */
 	DROP package AdminPackage;

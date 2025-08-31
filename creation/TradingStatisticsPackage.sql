@@ -26,28 +26,26 @@ AS
 	BEGIN
 		BEGIN
 			SELECT 1 INTO vParticipantID
-			FROM Participants p WHERE p.ID = pParticipantID
-			FOR UPDATE;
+			FROM Participants p WHERE p.ID = pParticipantID;
 		EXCEPTION
 			WHEN NO_DATA_FOUND THEN
 				RAISE_APPLICATION_ERROR(-20001, 'Participant not found: ' || pParticipantID);
 		END;
 		BEGIN
 			SELECT 1 INTO vContractID
-			FROM Contracts c WHERE c.ID = pContract
-			FOR UPDATE;
+			FROM Contracts c WHERE c.ID = pContract;
 		EXCEPTION
 			WHEN NO_DATA_FOUND THEN
 				RAISE_APPLICATION_ERROR(-20005, 'Contract not found: ' || pContract);
 		END;
 
-		SELECT sum(t.Quantity)
+		SELECT nvl(sum(t.Quantity), 0)
 		INTO vBuyPosition
 		FROM Trades t
 		INNER JOIN Orders o ON t.BuyOrderID = o.ID
 		WHERE o.ContractID = pContract AND o.OwnerID = pParticipantID;
 
-		SELECT sum(t.Quantity)
+		SELECT nvl(sum(t.Quantity), 0)
 		INTO vSellPosition
 		FROM Trades t
 		INNER JOIN Orders o ON t.SellOrderID = o.ID
@@ -66,22 +64,20 @@ AS
 	BEGIN
 		BEGIN
 			SELECT 1 INTO vParticipantID
-			FROM Participants p WHERE p.ID = pParticipantID
-			FOR UPDATE;
+			FROM Participants p WHERE p.ID = pParticipantID;
 		EXCEPTION
 			WHEN NO_DATA_FOUND THEN
 				RAISE_APPLICATION_ERROR(-20001, 'Participant not found: ' || pParticipantID);
 		END;
 		BEGIN
 			SELECT 1 INTO vProductID
-			FROM Products p WHERE p.ID = pProduct
-			FOR UPDATE;
+			FROM Products p WHERE p.ID = pProduct;
 		EXCEPTION
 			WHEN NO_DATA_FOUND THEN
 				RAISE_APPLICATION_ERROR(-20002, 'Product not found: ' || pProduct);
 		END;
 
-		SELECT sum(pnl.Value)
+		SELECT nvl(sum(pnl.Value), 0)
 		INTO vPNL
 		FROM ProfitAndLoss pnl
 		INNER JOIN Contracts ctr ON pnl.ContractID = ctr.ID

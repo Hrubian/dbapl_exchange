@@ -14,7 +14,7 @@ CREATE TABLE Contracts(
 		CONSTRAINT Contracts_PK PRIMARY KEY,
 	ProductID numeric(15) NOT NULL
 		CONSTRAINT Contracts_ProductID_FK REFERENCES Products(ID),
-	TradingStart timestamp(3) NOT NULL,
+	TradingStart timestamp(3) WITH time ZONE NOT NULL,
 	Expired char(1) DEFAULT 'N' NOT NULL
 		CONSTRAINT Contracts_Expired_Bounds check(Expired IN ('Y', 'N'))
 );
@@ -43,7 +43,7 @@ CREATE TABLE Orders(
 		CONSTRAINT Orders_PK PRIMARY KEY,
 	Price numeric(6, 2) NOT NULL,
 	Quantity numeric(6, 1)  NOT NULL
-		CONSTRAINT Order_Quantity_Positive check(Quantity > 0),
+		CONSTRAINT Order_Quantity_Nonnegative check(Quantity >= 0),
 	Side varchar(4) NOT NULL
 		CONSTRAINT Order_Side_Bounds CHECK(Side IN ('Buy', 'Sell')),
 	Active char(1) DEFAULT 'Y' NOT null
@@ -161,8 +161,8 @@ BEGIN
 	RAISE_APPLICATION_ERROR(-20020, 'Updates or delete are not allowed on the audit log.');
 END;
 
-CREATE OR REPLACE TRIGGER TradesImmutable
-BEFORE UPDATE OR DELETE ON Trades
+CREATE OR REPLACE TRIGGER TradesNonDeletable
+BEFORE DELETE ON Trades
 FOR EACH ROW
 BEGIN
 	RAISE_APPLICATION_ERROR(-20021, 'The trades cannot be removed and altered for audit purposes');

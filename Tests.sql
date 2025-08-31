@@ -19,7 +19,7 @@ END;
 -- create some contracts
 BEGIN
 	AdminPackage.CreateContract(1, systimestamp); -- ID 1
-	AdminPackage.CreateContract(1, systimestamp + INTERVAL '10' MINUTES); -- ID 2 (yet inactive)
+	AdminPackage.CreateContract(1, systimestamp + INTERVAL '10' MINUTE); -- ID 2 (yet inactive)
 	AdminPackage.CreateContract(3, systimestamp); -- ID 3
 END;
 
@@ -56,6 +56,16 @@ BEGIN
 		pSide => 'Sell',
 		pOwner => 1,
 		pContract => 3
+	);
+END;
+-- should fail because Pavarotti has limits to sell only 50
+BEGIN
+	OrdersPackage.NewOrder(
+		pPrice => 23,
+		pQuantity => 75,
+		pSide => 'Sell',
+		pOwner => 1,
+		pContract => 1
 	);
 END;
 
@@ -151,6 +161,8 @@ BEGIN
 		pOrderID => 5
 	);
 END;
+-- there should be no active orders left
+SELECT * FROM ActiveOrders;
 
 -- there should be one more trade
 -- quantity 5, price 205 between Renee and Dmitri
@@ -158,7 +170,6 @@ SELECT * FROM TradesWithParticipants;
 
 
 -- now let us examine the positions of the market participants on the contract ID 1
-
 SELECT 
 	TradingStatisticsPackage.GetPosition(pParticipantID => 1, pContract => 1) Pavarotti,
 	TradingStatisticsPackage.GetPosition(pParticipantID => 2, pContract => 1) Renee,

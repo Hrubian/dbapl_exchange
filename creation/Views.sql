@@ -46,9 +46,14 @@ AS
 
 CREATE OR REPLACE VIEW TradesWithParticipants
 AS
-	SELECT t.Quantity Quantity, t.Price Price, bp.LegalName Buyer, sp.LegalName Seller 
+	SELECT t.Quantity Quantity, t.Price Price, bp.LegalName Buyer, sp.LegalName Seller, t.ExecutionTs
 		FROM Trades t
 		INNER JOIN Orders bo ON t.BuyOrderID = bo.ID
 		INNER JOIN Orders so ON t.SellOrderID = so.ID
-		INNER JOIN Participant bp ON bp.ID = bo.OwnerID
-		INNER join Participant sp ON sp.ID = so.OwnerID;
+		INNER JOIN Participants bp ON bp.ID = bo.OwnerID
+		INNER join Participants sp ON sp.ID = so.OwnerID
+		ORDER BY t.ExecutionTs;
+
+
+
+
