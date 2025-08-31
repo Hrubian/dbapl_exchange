@@ -7,4 +7,4 @@ BEGIN
 	dbms_stats.delete_table_stats(USER, 'trades');
 	dbms_stats.delete_table_stats(USER, 'profitAndLoss');
 	dbms_stats.delete_table_stats(USER, 'auditLog');
-END
+END;
